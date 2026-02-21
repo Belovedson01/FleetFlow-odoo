@@ -55,7 +55,7 @@ Password for all accounts: `Password@123`
 - `SAFETY`: update driver compliance
 - `ANALYST`: reports/analytics only
 
-## Suggested Commit Sequence
+## Commit Sequence
 
 1. Project setup
 2. Database schema + seed
