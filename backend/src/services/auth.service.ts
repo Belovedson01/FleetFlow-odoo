@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import type { Request } from 'express';
 import { Role, type User } from '@prisma/client';
 import { prisma } from '../prisma/client';
+import { sendEmail } from './email.service';
 import type { AuthUser } from '../types/auth';
 import { logAudit } from '../utils/audit';
 import { ApiError } from '../utils/http';
@@ -46,6 +47,19 @@ const lockUntilDate = () => new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000);
 const hashToken = (rawToken: string) => crypto.createHash('sha256').update(rawToken).digest('hex');
 const generateSecureToken = () => crypto.randomBytes(48).toString('hex');
 
+const sendAuthEmail = async ({ to, subject, html }: { to: string; subject: string; html: string }) => {
+  try {
+    await sendEmail({ to, subject, html });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(
+      `Email delivery failed for subject "${subject}"`,
+      error instanceof Error ? error.message : 'Unknown error'
+    );
+    throw new ApiError(500, 'Email service temporarily unavailable');
+  }
+};
+
 const issueEmailVerificationToken = async (userId: number, email: string) => {
   const rawToken = generateSecureToken();
   const emailVerificationTokenHash = hashToken(rawToken);
@@ -61,8 +75,11 @@ const issueEmailVerificationToken = async (userId: number, email: string) => {
 
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
   const verifyLink = `${frontendUrl}/verify-email?token=${rawToken}`;
-  // eslint-disable-next-line no-console
-  console.log(`Email verification link for ${email}: ${verifyLink}`);
+  await sendAuthEmail({
+    to: email,
+    subject: 'Verify Your FleetFlow Account',
+    html: `<p>Welcome to FleetFlow.</p><p>Please verify your account by clicking the link below:</p><p><a href="${verifyLink}">${verifyLink}</a></p>`
+  });
 };
 
 const issueRefreshToken = async (userId: number) => {
@@ -232,8 +249,11 @@ export const forgotPassword = async (email: string) => {
 
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
   const resetLink = `${frontendUrl}/reset-password?token=${rawToken}`;
-  // eslint-disable-next-line no-console
-  console.log(`Password reset link for ${user.email}: ${resetLink}`);
+  await sendAuthEmail({
+    to: user.email,
+    subject: 'FleetFlow Password Reset',
+    html: `<p>Click below to reset your FleetFlow password:</p><p><a href="${resetLink}">${resetLink}</a></p>`
+  });
 
   return generic;
 };
