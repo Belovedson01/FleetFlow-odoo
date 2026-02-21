@@ -9,3 +9,6 @@ dist
 coverage
 backend/prisma/migrations
 frontend/dist
+frontend/*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
