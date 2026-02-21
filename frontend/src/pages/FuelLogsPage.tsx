@@ -8,7 +8,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
-import { shortDate } from '../lib/format';
+import { money, shortDate } from '../lib/format';
 import { fuelService } from '../services/fuel';
 import { vehicleService } from '../services/vehicles';
 import { useAuthStore } from '../store/auth.store';
@@ -95,11 +95,11 @@ export const FuelLogsPage = () => {
       { header: 'Log #', accessorKey: 'id' },
       { header: 'Vehicle', cell: ({ row }) => row.original.vehicle.name },
       { header: 'Liters', cell: ({ row }) => row.original.liters.toFixed(2) },
-      { header: 'Cost', cell: ({ row }) => `$${row.original.cost.toFixed(2)}` },
+      { header: 'Cost', cell: ({ row }) => money(row.original.cost) },
       { header: 'Odometer', cell: ({ row }) => row.original.odometer.toLocaleString() },
       {
         header: 'Cost / km',
-        cell: ({ row }) => `$${(costPerKmByLogId.get(row.original.id) || 0).toFixed(2)}`
+        cell: ({ row }) => money(costPerKmByLogId.get(row.original.id) || 0)
       },
       { header: 'Date', cell: ({ row }) => shortDate(row.original.date) },
       {

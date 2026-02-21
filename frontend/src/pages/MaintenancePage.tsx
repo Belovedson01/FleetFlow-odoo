@@ -8,7 +8,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
-import { shortDate } from '../lib/format';
+import { money, shortDate } from '../lib/format';
 import { maintenanceService } from '../services/maintenance';
 import { vehicleService } from '../services/vehicles';
 import { useAuthStore } from '../store/auth.store';
@@ -73,7 +73,7 @@ export const MaintenancePage = () => {
       { header: 'Log #', accessorKey: 'id' },
       { header: 'Vehicle', cell: ({ row }) => row.original.vehicle.name },
       { header: 'Description', accessorKey: 'description' },
-      { header: 'Cost', cell: ({ row }) => `$${row.original.cost.toFixed(2)}` },
+      { header: 'Cost', cell: ({ row }) => money(row.original.cost) },
       { header: 'Date', cell: ({ row }) => shortDate(row.original.date) },
       {
         header: 'Actions',

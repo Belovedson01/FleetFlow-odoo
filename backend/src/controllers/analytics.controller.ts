@@ -3,6 +3,9 @@ import PDFDocument from 'pdfkit';
 import { asyncHandler } from '../utils/http';
 import { buildAnalyticsCsv, getAnalyticsData, getDashboardData } from '../services/analytics.service';
 
+const inr = (value: number) =>
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(value);
+
 export const getDashboardController = asyncHandler(async (_req: Request, res: Response) => {
   const dashboard = await getDashboardData();
   res.json(dashboard);
@@ -35,7 +38,7 @@ export const exportAnalyticsPdfController = asyncHandler(async (_req: Request, r
 
   doc.fontSize(18).text('FleetFlow Analytics Report');
   doc.moveDown();
-  doc.fontSize(12).text(`Total Operational Cost: $${analytics.kpis.totalOperationalCost.toFixed(2)}`);
+  doc.fontSize(12).text(`Total Operational Cost: ${inr(analytics.kpis.totalOperationalCost)}`);
   doc.text(`Fleet ROI: ${(analytics.kpis.fleetRoi * 100).toFixed(2)}%`);
   doc.text(`Fleet Fuel Efficiency: ${analytics.kpis.fleetFuelEfficiency.toFixed(2)} km/l`);
   doc.moveDown();
@@ -46,7 +49,7 @@ export const exportAnalyticsPdfController = asyncHandler(async (_req: Request, r
     doc
       .fontSize(10)
       .text(
-        `${row.vehicleName} (${row.licensePlate}) | Revenue: $${row.revenue.toFixed(2)} | Cost: $${row.totalOperationalCost.toFixed(2)} | ROI: ${(row.roi * 100).toFixed(2)}%`
+        `${row.vehicleName} (${row.licensePlate}) | Revenue: ${inr(row.revenue)} | Cost: ${inr(row.totalOperationalCost)} | ROI: ${(row.roi * 100).toFixed(2)}%`
       );
   });
 
