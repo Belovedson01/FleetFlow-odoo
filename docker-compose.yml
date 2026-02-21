@@ -1,0 +1,56 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: fleetflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fleetflow
+      POSTGRES_PASSWORD: fleetflow
+      POSTGRES_DB: fleetflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fleetflow-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      DATABASE_URL: postgresql://fleetflow:fleetflow@postgres:5432/fleetflow?schema=public
+      JWT_SECRET: super_secret_change_me
+      JWT_EXPIRES_IN: 7d
+      FRONTEND_URL: http://localhost:5173
+    ports:
+      - "4000:4000"
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npx prisma generate && npx prisma db push && npm run seed && npm run dev"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: fleetflow-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:4000/api
+      VITE_SOCKET_URL: http://localhost:4000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev -- --host"
+
+volumes:
+  postgres_data:
