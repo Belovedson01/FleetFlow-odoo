@@ -9,6 +9,8 @@ import {
   me,
   refreshTokenController,
   register,
+  resendVerificationController,
+  verifyEmailController,
   resetPasswordController
 } from '../controllers/auth.controller';
 import { authenticate } from '../middlewares/auth.middleware';
@@ -19,6 +21,8 @@ import {
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
+  resendVerificationSchema,
+  verifyEmailSchema,
   resetPasswordSchema
 } from '../validators/auth.validator';
 
@@ -34,6 +38,8 @@ const authRateLimiter = rateLimit({
 router.post('/login', authRateLimiter, validateBody(loginSchema), login);
 router.post('/register', authRateLimiter, validateBody(registerSchema), register);
 router.post('/forgot-password', authRateLimiter, validateBody(forgotPasswordSchema), forgotPasswordController);
+router.post('/resend-verification', authRateLimiter, validateBody(resendVerificationSchema), resendVerificationController);
+router.post('/verify-email', authRateLimiter, validateBody(verifyEmailSchema), verifyEmailController);
 router.post('/reset-password', authRateLimiter, validateBody(resetPasswordSchema), resetPasswordController);
 router.post('/refresh', refreshTokenController);
 router.post('/logout', authenticate, logoutController);

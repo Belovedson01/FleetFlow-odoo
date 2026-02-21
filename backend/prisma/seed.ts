@@ -8,45 +8,65 @@ async function main() {
 
   await prisma.user.upsert({
     where: { email: 'manager@fleetflow.com' },
-    update: {},
+    update: {
+      emailVerifiedAt: new Date(),
+      emailVerificationTokenHash: null,
+      emailVerificationTokenExpiry: null
+    },
     create: {
       name: 'Maya Manager',
       email: 'manager@fleetflow.com',
       password,
-      role: Role.MANAGER
+      role: Role.MANAGER,
+      emailVerifiedAt: new Date()
     }
   });
 
   await prisma.user.upsert({
     where: { email: 'dispatcher@fleetflow.com' },
-    update: {},
+    update: {
+      emailVerifiedAt: new Date(),
+      emailVerificationTokenHash: null,
+      emailVerificationTokenExpiry: null
+    },
     create: {
       name: 'Derek Dispatcher',
       email: 'dispatcher@fleetflow.com',
       password,
-      role: Role.DISPATCHER
+      role: Role.DISPATCHER,
+      emailVerifiedAt: new Date()
     }
   });
 
   await prisma.user.upsert({
     where: { email: 'safety@fleetflow.com' },
-    update: {},
+    update: {
+      emailVerifiedAt: new Date(),
+      emailVerificationTokenHash: null,
+      emailVerificationTokenExpiry: null
+    },
     create: {
       name: 'Sara Safety',
       email: 'safety@fleetflow.com',
       password,
-      role: Role.SAFETY
+      role: Role.SAFETY,
+      emailVerifiedAt: new Date()
     }
   });
 
   await prisma.user.upsert({
     where: { email: 'analyst@fleetflow.com' },
-    update: {},
+    update: {
+      emailVerifiedAt: new Date(),
+      emailVerificationTokenHash: null,
+      emailVerificationTokenExpiry: null
+    },
     create: {
       name: 'Aria Analyst',
       email: 'analyst@fleetflow.com',
       password,
-      role: Role.ANALYST
+      role: Role.ANALYST,
+      emailVerifiedAt: new Date()
     }
   });
 

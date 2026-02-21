@@ -84,6 +84,9 @@ export const LoginPage = () => {
           <Link to="/forgot-password" className="font-medium text-brand-700">
             Forgot password?
           </Link>
+          <Link to="/resend-verification" className="font-medium text-brand-700">
+            Verify email
+          </Link>
           <Link to="/register" className="font-medium text-brand-700">
             Register
           </Link>

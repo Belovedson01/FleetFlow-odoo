@@ -8,7 +8,9 @@ import {
   loginUser,
   refreshAccessToken,
   registerUser,
-  resetPassword
+  resendVerification,
+  resetPassword,
+  verifyEmail
 } from '../services/auth.service';
 import { ApiError } from '../utils/http';
 
@@ -44,6 +46,16 @@ export const me = asyncHandler(async (req: Request, res: Response) => {
 
 export const forgotPasswordController = asyncHandler(async (req: Request, res: Response) => {
   const response = await forgotPassword(req.body.email);
+  res.json(response);
+});
+
+export const resendVerificationController = asyncHandler(async (req: Request, res: Response) => {
+  const response = await resendVerification(req.body.email);
+  res.json(response);
+});
+
+export const verifyEmailController = asyncHandler(async (req: Request, res: Response) => {
+  const response = await verifyEmail(req.body.token);
   res.json(response);
 });
 

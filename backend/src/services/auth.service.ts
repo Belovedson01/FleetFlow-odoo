@@ -31,7 +31,31 @@ const refreshTokenExpiryDate = () => {
   return new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 };
 
+const verificationTokenExpiryDate = () => {
+  const hours = Number(process.env.EMAIL_VERIFICATION_EXPIRES_HOURS || 24);
+  return new Date(Date.now() + hours * 60 * 60 * 1000);
+};
+
 const hashToken = (rawToken: string) => crypto.createHash('sha256').update(rawToken).digest('hex');
+
+const issueEmailVerificationToken = async (userId: number, email: string) => {
+  const rawToken = crypto.randomBytes(32).toString('hex');
+  const emailVerificationTokenHash = hashToken(rawToken);
+  const emailVerificationTokenExpiry = verificationTokenExpiryDate();
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      emailVerificationTokenHash,
+      emailVerificationTokenExpiry
+    }
+  });
+
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const verifyLink = `${frontendUrl}/verify-email?token=${rawToken}`;
+  // eslint-disable-next-line no-console
+  console.log(`Email verification link for ${email}: ${verifyLink}`);
+};
 
 export const registerUser = async (input: PublicRegisterInput) => {
   const existing = await prisma.user.findUnique({ where: { email: input.email } });
@@ -43,6 +67,7 @@ export const registerUser = async (input: PublicRegisterInput) => {
   const user = await prisma.user.create({
     data: { ...input, password, role: Role.DRIVER }
   });
+  await issueEmailVerificationToken(user.id, user.email);
 
   return {
     id: user.id,
@@ -61,7 +86,7 @@ export const createPrivilegedUser = async (input: PrivilegedUserInput) => {
 
   const password = await hashPassword(input.password);
   const user = await prisma.user.create({
-    data: { ...input, password }
+    data: { ...input, password, emailVerifiedAt: new Date() }
   });
 
   return {
@@ -82,6 +107,9 @@ export const loginUser = async (email: string, password: string) => {
   const isValid = await comparePassword(password, user.password);
   if (!isValid) {
     throw new ApiError(401, 'Invalid credentials.');
+  }
+  if (!user.emailVerifiedAt) {
+    throw new ApiError(403, 'Email not verified. Please verify your email before signing in.');
   }
 
   const authUser = authUserFromRecord(user);
@@ -143,6 +171,44 @@ export const forgotPassword = async (email: string) => {
   console.log(`Password reset link for ${user.email}: ${resetLink}`);
 
   return generic;
+};
+
+export const resendVerification = async (email: string) => {
+  const generic = { message: 'If this email exists, verification instructions have been sent.' };
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user || user.emailVerifiedAt) {
+    return generic;
+  }
+
+  await issueEmailVerificationToken(user.id, user.email);
+  return generic;
+};
+
+export const verifyEmail = async (token: string) => {
+  const emailVerificationTokenHash = hashToken(token);
+  const user = await prisma.user.findFirst({
+    where: {
+      emailVerificationTokenHash,
+      emailVerificationTokenExpiry: {
+        gt: new Date()
+      }
+    }
+  });
+
+  if (!user) {
+    throw new ApiError(400, 'Verification token is invalid or expired.');
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      emailVerifiedAt: new Date(),
+      emailVerificationTokenHash: null,
+      emailVerificationTokenExpiry: null
+    }
+  });
+
+  return { message: 'Email verified successfully. You can now sign in.' };
 };
 
 export const resetPassword = async (token: string, password: string) => {

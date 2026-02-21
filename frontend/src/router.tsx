@@ -11,7 +11,9 @@ import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { MaintenancePage } from './pages/MaintenancePage';
 import { RegisterPage } from './pages/RegisterPage';
+import { ResendVerificationPage } from './pages/ResendVerificationPage';
 import { TripsPage } from './pages/TripsPage';
+import { VerifyEmailPage } from './pages/VerifyEmailPage';
 import { VehiclesPage } from './pages/VehiclesPage';
 import { DispatcherDashboardPage } from './pages/dashboard/DispatcherDashboardPage';
 import { DriverDashboardPage } from './pages/dashboard/DriverDashboardPage';
@@ -47,6 +49,14 @@ export const router = createBrowserRouter([
       {
         path: '/forgot-password',
         element: <ForgotPasswordPage />
+      },
+      {
+        path: '/verify-email',
+        element: <VerifyEmailPage />
+      },
+      {
+        path: '/resend-verification',
+        element: <ResendVerificationPage />
       }
     ]
   },
