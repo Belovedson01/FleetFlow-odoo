@@ -14,6 +14,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { TripsPage } from './pages/TripsPage';
 import { VehiclesPage } from './pages/VehiclesPage';
 import { DispatcherDashboardPage } from './pages/dashboard/DispatcherDashboardPage';
+import { DriverDashboardPage } from './pages/dashboard/DriverDashboardPage';
 import { FinanceDashboardPage } from './pages/dashboard/FinanceDashboardPage';
 import { ManagerDashboardPage } from './pages/dashboard/ManagerDashboardPage';
 import { SafetyDashboardPage } from './pages/dashboard/SafetyDashboardPage';
@@ -61,6 +62,10 @@ export const router = createBrowserRouter([
           {
             element: <RequireRoles roles={['MANAGER']} />,
             children: [{ path: 'dashboard/manager', element: <ManagerDashboardPage /> }]
+          },
+          {
+            element: <RequireRoles roles={['DRIVER']} />,
+            children: [{ path: 'dashboard/driver', element: <DriverDashboardPage /> }]
           },
           {
             element: <RequireRoles roles={['DISPATCHER']} />,

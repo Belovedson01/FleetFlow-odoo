@@ -5,7 +5,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Select } from '../components/ui/Select';
 import { authService } from '../services/auth';
 
 const registerSchema = z.object({
@@ -15,8 +14,7 @@ const registerSchema = z.object({
     .string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/[A-Z]/, 'Password must contain an uppercase letter')
-    .regex(/[0-9]/, 'Password must contain a number'),
-  role: z.enum(['MANAGER', 'DISPATCHER', 'SAFETY', 'ANALYST'])
+    .regex(/[0-9]/, 'Password must contain a number')
 });
 
 type RegisterForm = z.infer<typeof registerSchema>;
@@ -29,8 +27,7 @@ export const RegisterPage = () => {
     defaultValues: {
       name: '',
       email: '',
-      password: '',
-      role: 'DISPATCHER'
+      password: ''
     }
   });
 
@@ -83,24 +80,10 @@ export const RegisterPage = () => {
             ) : null}
           </div>
 
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-600">Role</label>
-            <Controller
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <Select {...field}>
-                  <option value="MANAGER">Manager</option>
-                  <option value="DISPATCHER">Dispatcher</option>
-                  <option value="SAFETY">Safety</option>
-                  <option value="ANALYST">Analyst</option>
-                </Select>
-              )}
-            />
-            {form.formState.errors.role ? (
-              <p className="mt-1 text-xs text-rose-600">{form.formState.errors.role.message}</p>
-            ) : null}
-          </div>
+          <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+            Public registration creates a <span className="font-semibold">DRIVER</span> account. Manager
+            approval is required for privileged role provisioning.
+          </p>
 
           {submitError ? <p className="text-sm text-rose-600">{submitError}</p> : null}
 
