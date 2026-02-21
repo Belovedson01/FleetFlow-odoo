@@ -1,10 +1,12 @@
 import crypto from 'crypto';
+import type { Request } from 'express';
+import { Role, type User } from '@prisma/client';
 import { prisma } from '../prisma/client';
 import type { AuthUser } from '../types/auth';
+import { logAudit } from '../utils/audit';
 import { ApiError } from '../utils/http';
-import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt';
+import { signAccessToken } from '../utils/jwt';
 import { comparePassword, hashPassword } from '../utils/password';
-import { Role } from '@prisma/client';
 
 type PublicRegisterInput = {
   name: string;
@@ -18,6 +20,9 @@ type PrivilegedUserInput = {
   password: string;
   role: Role;
 };
+
+const LOCKOUT_ATTEMPTS = Number(process.env.LOGIN_LOCKOUT_ATTEMPTS || 5);
+const LOCKOUT_MINUTES = Number(process.env.LOGIN_LOCKOUT_MINUTES || 15);
 
 const authUserFromRecord = (user: { id: number; name: string; email: string; role: Role }): AuthUser => ({
   id: user.id,
@@ -36,10 +41,13 @@ const verificationTokenExpiryDate = () => {
   return new Date(Date.now() + hours * 60 * 60 * 1000);
 };
 
+const lockUntilDate = () => new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000);
+
 const hashToken = (rawToken: string) => crypto.createHash('sha256').update(rawToken).digest('hex');
+const generateSecureToken = () => crypto.randomBytes(48).toString('hex');
 
 const issueEmailVerificationToken = async (userId: number, email: string) => {
-  const rawToken = crypto.randomBytes(32).toString('hex');
+  const rawToken = generateSecureToken();
   const emailVerificationTokenHash = hashToken(rawToken);
   const emailVerificationTokenExpiry = verificationTokenExpiryDate();
 
@@ -55,6 +63,47 @@ const issueEmailVerificationToken = async (userId: number, email: string) => {
   const verifyLink = `${frontendUrl}/verify-email?token=${rawToken}`;
   // eslint-disable-next-line no-console
   console.log(`Email verification link for ${email}: ${verifyLink}`);
+};
+
+const issueRefreshToken = async (userId: number) => {
+  const rawToken = generateSecureToken();
+  const tokenHash = hashToken(rawToken);
+  const expiresAt = refreshTokenExpiryDate();
+
+  await prisma.refreshToken.create({
+    data: {
+      userId,
+      tokenHash,
+      expiresAt
+    }
+  });
+
+  return rawToken;
+};
+
+const revokeAllRefreshTokensForUser = async (userId: number) => {
+  await prisma.refreshToken.updateMany({
+    where: {
+      userId,
+      revoked: false
+    },
+    data: {
+      revoked: true
+    }
+  });
+};
+
+const incrementFailureAndLock = async (user: User) => {
+  const nextAttempts = user.failedLoginAttempts + 1;
+  const shouldLock = nextAttempts >= LOCKOUT_ATTEMPTS;
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      failedLoginAttempts: shouldLock ? LOCKOUT_ATTEMPTS : nextAttempts,
+      lockUntil: shouldLock ? lockUntilDate() : null
+    }
+  });
+  return shouldLock;
 };
 
 export const registerUser = async (input: PublicRegisterInput) => {
@@ -98,33 +147,49 @@ export const createPrivilegedUser = async (input: PrivilegedUserInput) => {
   };
 };
 
-export const loginUser = async (email: string, password: string) => {
+export const loginUser = async (email: string, password: string, req?: Request) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
+    await logAudit({ action: 'auth.login.failed', req });
     throw new ApiError(401, 'Invalid credentials.');
+  }
+
+  if (user.lockUntil && user.lockUntil > new Date()) {
+    await logAudit({ userId: user.id, action: 'auth.login.locked', req });
+    throw new ApiError(423, 'Account is locked. Please try again later.');
   }
 
   const isValid = await comparePassword(password, user.password);
   if (!isValid) {
+    const locked = await incrementFailureAndLock(user);
+    await logAudit({
+      userId: user.id,
+      action: locked ? 'auth.login.locked' : 'auth.login.failed',
+      req
+    });
+    if (locked) {
+      throw new ApiError(423, `Account locked for ${LOCKOUT_MINUTES} minutes due to failed login attempts.`);
+    }
     throw new ApiError(401, 'Invalid credentials.');
   }
+
   if (!user.emailVerifiedAt) {
+    await logAudit({ userId: user.id, action: 'auth.login.unverified', req });
     throw new ApiError(403, 'Email not verified. Please verify your email before signing in.');
   }
-
-  const authUser = authUserFromRecord(user);
-  const token = signAccessToken(authUser);
-  const refreshToken = signRefreshToken(user.id);
-  const refreshTokenHash = hashToken(refreshToken);
-  const refreshTokenExpiresAt = refreshTokenExpiryDate();
 
   await prisma.user.update({
     where: { id: user.id },
     data: {
-      refreshTokenHash,
-      refreshTokenExpiresAt
+      failedLoginAttempts: 0,
+      lockUntil: null
     }
   });
+
+  const authUser = authUserFromRecord(user);
+  const token = signAccessToken(authUser);
+  const refreshToken = await issueRefreshToken(user.id);
+  await logAudit({ userId: user.id, action: 'auth.login.success', req });
 
   return {
     token,
@@ -153,7 +218,7 @@ export const forgotPassword = async (email: string) => {
     return generic;
   }
 
-  const rawToken = crypto.randomBytes(32).toString('hex');
+  const rawToken = generateSecureToken();
   const resetTokenHash = hashToken(rawToken);
   const passwordResetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
 
@@ -184,7 +249,7 @@ export const resendVerification = async (email: string) => {
   return generic;
 };
 
-export const verifyEmail = async (token: string) => {
+export const verifyEmail = async (token: string, req?: Request) => {
   const emailVerificationTokenHash = hashToken(token);
   const user = await prisma.user.findFirst({
     where: {
@@ -207,11 +272,12 @@ export const verifyEmail = async (token: string) => {
       emailVerificationTokenExpiry: null
     }
   });
+  await logAudit({ userId: user.id, action: 'auth.email.verified', req });
 
   return { message: 'Email verified successfully. You can now sign in.' };
 };
 
-export const resetPassword = async (token: string, password: string) => {
+export const resetPassword = async (token: string, password: string, req?: Request) => {
   const passwordResetTokenHash = hashToken(token);
   const user = await prisma.user.findFirst({
     where: {
@@ -232,55 +298,90 @@ export const resetPassword = async (token: string, password: string) => {
     data: {
       password: hashedPassword,
       passwordResetTokenHash: null,
-      passwordResetTokenExpiry: null,
-      refreshTokenHash: null,
-      refreshTokenExpiresAt: null
+      passwordResetTokenExpiry: null
     }
   });
+  await revokeAllRefreshTokensForUser(user.id);
+  await logAudit({ userId: user.id, action: 'auth.password.reset', req });
 
   return { message: 'Password updated successfully.' };
 };
 
-export const refreshAccessToken = async (refreshToken: string) => {
-  const userId = verifyRefreshToken(refreshToken);
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user || !user.refreshTokenHash || !user.refreshTokenExpiresAt) {
-    throw new ApiError(401, 'Invalid refresh token.');
-  }
-
+export const refreshAccessToken = async (refreshToken: string, req?: Request) => {
   const incomingHash = hashToken(refreshToken);
-  if (incomingHash !== user.refreshTokenHash || user.refreshTokenExpiresAt < new Date()) {
-    throw new ApiError(401, 'Refresh token expired or invalid.');
-  }
-
-  const nextRefreshToken = signRefreshToken(user.id);
-  const nextRefreshHash = hashToken(nextRefreshToken);
-  const nextRefreshExpiry = refreshTokenExpiryDate();
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      refreshTokenHash: nextRefreshHash,
-      refreshTokenExpiresAt: nextRefreshExpiry
+  const tokenRecord = await prisma.refreshToken.findFirst({
+    where: {
+      tokenHash: incomingHash,
+      revoked: false
+    },
+    include: {
+      user: true
     }
   });
 
-  const authUser = authUserFromRecord(user);
+  if (!tokenRecord) {
+    await logAudit({ action: 'auth.refresh.failed', req });
+    throw new ApiError(401, 'Invalid refresh token.');
+  }
+
+  if (tokenRecord.expiresAt <= new Date()) {
+    await prisma.refreshToken.update({
+      where: { id: tokenRecord.id },
+      data: { revoked: true }
+    });
+    await logAudit({ userId: tokenRecord.userId, action: 'auth.refresh.failed', req });
+    throw new ApiError(401, 'Refresh token expired or revoked.');
+  }
+
+  const nextRawToken = generateSecureToken();
+  const nextTokenHash = hashToken(nextRawToken);
+  const nextExpiresAt = refreshTokenExpiryDate();
+
+  await prisma.$transaction([
+    prisma.refreshToken.update({
+      where: { id: tokenRecord.id },
+      data: { revoked: true }
+    }),
+    prisma.refreshToken.create({
+      data: {
+        userId: tokenRecord.userId,
+        tokenHash: nextTokenHash,
+        expiresAt: nextExpiresAt
+      }
+    })
+  ]);
+
+  const authUser = authUserFromRecord(tokenRecord.user);
   const accessToken = signAccessToken(authUser);
+  await logAudit({ userId: tokenRecord.userId, action: 'auth.refresh.rotated', req });
+
   return {
     token: accessToken,
-    refreshToken: nextRefreshToken,
+    refreshToken: nextRawToken,
     user: authUser
   };
 };
 
-export const clearRefreshToken = async (userId: number) => {
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      refreshTokenHash: null,
-      refreshTokenExpiresAt: null
-    }
+export const clearRefreshToken = async (refreshToken?: string | null, req?: Request) => {
+  if (!refreshToken) {
+    return {
+      message: 'Logged out.'
+    };
+  }
+
+  const tokenHash = hashToken(refreshToken);
+  const tokenRecord = await prisma.refreshToken.findFirst({
+    where: { tokenHash },
+    select: { id: true, userId: true, revoked: true }
   });
+
+  if (tokenRecord && !tokenRecord.revoked) {
+    await prisma.refreshToken.update({
+      where: { id: tokenRecord.id },
+      data: { revoked: true }
+    });
+    await logAudit({ userId: tokenRecord.userId, action: 'auth.logout', req });
+  }
 
   return {
     message: 'Logged out.'

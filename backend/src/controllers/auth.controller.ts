@@ -20,7 +20,7 @@ const refreshCookieMaxAge = Number(process.env.JWT_REFRESH_EXPIRES_DAYS || 7) * 
 const refreshCookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
+  sameSite: 'strict' as const,
   path: '/api/auth',
   maxAge: refreshCookieMaxAge
 };
@@ -31,7 +31,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
-  const data = await loginUser(req.body.email, req.body.password);
+  const data = await loginUser(req.body.email, req.body.password, req);
   res.cookie(refreshCookieName, data.refreshToken, refreshCookieOptions);
   res.json({
     token: data.token,
@@ -55,12 +55,12 @@ export const resendVerificationController = asyncHandler(async (req: Request, re
 });
 
 export const verifyEmailController = asyncHandler(async (req: Request, res: Response) => {
-  const response = await verifyEmail(req.body.token);
+  const response = await verifyEmail(req.body.token, req);
   res.json(response);
 });
 
 export const resetPasswordController = asyncHandler(async (req: Request, res: Response) => {
-  const response = await resetPassword(req.body.token, req.body.password);
+  const response = await resetPassword(req.body.token, req.body.password, req);
   res.json(response);
 });
 
@@ -70,7 +70,7 @@ export const refreshTokenController = asyncHandler(async (req: Request, res: Res
     throw new ApiError(401, 'Refresh token missing.');
   }
 
-  const response = await refreshAccessToken(refreshToken);
+  const response = await refreshAccessToken(refreshToken, req);
   res.cookie(refreshCookieName, response.refreshToken, refreshCookieOptions);
   res.json({
     token: response.token,
@@ -79,7 +79,8 @@ export const refreshTokenController = asyncHandler(async (req: Request, res: Res
 });
 
 export const logoutController = asyncHandler(async (req: Request, res: Response) => {
-  await clearRefreshToken(req.user!.id);
+  const refreshToken = req.cookies?.[refreshCookieName];
+  await clearRefreshToken(refreshToken, req);
   res.clearCookie(refreshCookieName, { path: '/api/auth' });
   res.json({ message: 'Logged out.' });
 });

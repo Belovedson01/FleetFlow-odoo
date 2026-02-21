@@ -2,6 +2,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
+import helmet from 'helmet';
 import morgan from 'morgan';
 import router from './routes';
 import { errorHandler, notFound } from './middlewares/error.middleware';
@@ -9,10 +10,12 @@ import { errorHandler, notFound } from './middlewares/error.middleware';
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', 1);
 
+app.use(helmet());
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: process.env.CORS_ORIGIN || process.env.FRONTEND_URL || 'http://localhost:5173',
     credentials: true
   })
 );

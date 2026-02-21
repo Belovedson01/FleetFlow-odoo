@@ -42,7 +42,7 @@ router.post('/resend-verification', authRateLimiter, validateBody(resendVerifica
 router.post('/verify-email', authRateLimiter, validateBody(verifyEmailSchema), verifyEmailController);
 router.post('/reset-password', authRateLimiter, validateBody(resetPasswordSchema), resetPasswordController);
 router.post('/refresh', refreshTokenController);
-router.post('/logout', authenticate, logoutController);
+router.post('/logout', logoutController);
 router.get('/me', authenticate, me);
 router.post(
   '/admin/users',

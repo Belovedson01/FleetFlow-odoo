@@ -37,19 +37,48 @@ enum TripStatus {
 }
 
 model User {
-  id                       Int       @id @default(autoincrement())
+  id                         Int            @id @default(autoincrement())
   name                     String
   email                    String    @unique
   password                 String
   role                     Role
+  failedLoginAttempts      Int            @default(0)
+  lockUntil                DateTime?
   emailVerifiedAt          DateTime?
   emailVerificationTokenHash String?
   emailVerificationTokenExpiry DateTime?
-  refreshTokenHash         String?
-  refreshTokenExpiresAt    DateTime?
   passwordResetTokenHash   String?
   passwordResetTokenExpiry DateTime?
-  createdAt                DateTime  @default(now())
+  refreshTokens            RefreshToken[]
+  auditLogs                AuditLog[]
+  createdAt                DateTime       @default(now())
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    Int
+  tokenHash String
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    Int?
+  action    String
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
 }
 
 model Vehicle {
