@@ -28,7 +28,12 @@ services:
       PORT: 4000
       DATABASE_URL: postgresql://fleetflow:fleetflow@postgres:5432/fleetflow?schema=public
       JWT_SECRET: super_secret_change_me
-      JWT_EXPIRES_IN: 7d
+      JWT_REFRESH_SECRET: super_refresh_secret_change_me
+      JWT_ACCESS_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+      JWT_REFRESH_EXPIRES_DAYS: 7
+      REFRESH_COOKIE_NAME: fleetflow_refresh_token
+      AUTH_RATE_LIMIT_MAX: 10
       FRONTEND_URL: http://localhost:5173
     ports:
       - "4000:4000"

@@ -9,6 +9,7 @@ datasource db {
 
 enum Role {
   MANAGER
+  DRIVER
   DISPATCHER
   SAFETY
   ANALYST
@@ -36,12 +37,16 @@ enum TripStatus {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  role      Role
-  createdAt DateTime @default(now())
+  id                       Int       @id @default(autoincrement())
+  name                     String
+  email                    String    @unique
+  password                 String
+  role                     Role
+  refreshTokenHash         String?
+  refreshTokenExpiresAt    DateTime?
+  passwordResetTokenHash   String?
+  passwordResetTokenExpiry DateTime?
+  createdAt                DateTime  @default(now())
 }
 
 model Vehicle {

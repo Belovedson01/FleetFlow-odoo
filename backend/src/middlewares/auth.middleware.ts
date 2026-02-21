@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { Role } from '@prisma/client';
 import { ApiError } from '../utils/http';
-import { verifyToken } from '../utils/jwt';
+import { verifyAccessToken } from '../utils/jwt';
 
 export const authenticate = (req: Request, _res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
@@ -11,7 +11,7 @@ export const authenticate = (req: Request, _res: Response, next: NextFunction) =
 
   try {
     const token = authHeader.replace('Bearer ', '');
-    req.user = verifyToken(token);
+    req.user = verifyAccessToken(token);
     next();
   } catch {
     next(new ApiError(401, 'Token verification failed.'));
