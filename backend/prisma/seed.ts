@@ -217,6 +217,84 @@ async function main() {
     });
   }
 
+  const draftTrip = await prisma.trip.findFirst({
+    where: {
+      vehicleId: vehicle1.id,
+      driverId: driver1.id,
+      origin: 'Austin',
+      destination: 'El Paso',
+      status: TripStatus.DRAFT
+    }
+  });
+  if (!draftTrip) {
+    await prisma.trip.create({
+      data: {
+        vehicleId: vehicle1.id,
+        driverId: driver1.id,
+        cargoWeight: 5000,
+        origin: 'Austin',
+        destination: 'El Paso',
+        revenue: 2100,
+        status: TripStatus.DRAFT,
+        startOdometer: null,
+        endOdometer: null,
+        createdAt: new Date('2026-02-12')
+      }
+    });
+  }
+
+  const cancelledTrip = await prisma.trip.findFirst({
+    where: {
+      vehicleId: vehicle3.id,
+      driverId: driver1.id,
+      origin: 'Houston',
+      destination: 'Lubbock',
+      status: TripStatus.CANCELLED
+    }
+  });
+  if (!cancelledTrip) {
+    await prisma.trip.create({
+      data: {
+        vehicleId: vehicle3.id,
+        driverId: driver1.id,
+        cargoWeight: 2800,
+        origin: 'Houston',
+        destination: 'Lubbock',
+        revenue: 1400,
+        status: TripStatus.CANCELLED,
+        startOdometer: 64950,
+        endOdometer: null,
+        createdAt: new Date('2026-02-15')
+      }
+    });
+  }
+
+  const completedTripTwo = await prisma.trip.findFirst({
+    where: {
+      vehicleId: vehicle1.id,
+      driverId: driver1.id,
+      origin: 'Austin',
+      destination: 'San Antonio',
+      status: TripStatus.COMPLETED
+    }
+  });
+  if (!completedTripTwo) {
+    await prisma.trip.create({
+      data: {
+        vehicleId: vehicle1.id,
+        driverId: driver1.id,
+        cargoWeight: 7600,
+        origin: 'Austin',
+        destination: 'San Antonio',
+        revenue: 2650,
+        status: TripStatus.COMPLETED,
+        startOdometer: 119320,
+        endOdometer: 119565,
+        createdAt: new Date('2026-02-18')
+      }
+    });
+  }
+
   const service = await prisma.serviceLog.findFirst({
     where: {
       vehicleId: vehicle3.id,
@@ -266,6 +344,41 @@ async function main() {
         cost: 430,
         odometer: 97920,
         date: new Date('2026-01-12')
+      }
+    });
+  }
+
+  const service2 = await prisma.serviceLog.findFirst({
+    where: {
+      vehicleId: vehicle1.id,
+      description: 'Engine oil and filter change'
+    }
+  });
+  if (!service2) {
+    await prisma.serviceLog.create({
+      data: {
+        vehicleId: vehicle1.id,
+        description: 'Engine oil and filter change',
+        cost: 320,
+        date: new Date('2026-02-08')
+      }
+    });
+  }
+
+  const fuel3 = await prisma.fuelLog.findFirst({
+    where: {
+      vehicleId: vehicle1.id,
+      odometer: 119565
+    }
+  });
+  if (!fuel3) {
+    await prisma.fuelLog.create({
+      data: {
+        vehicleId: vehicle1.id,
+        liters: 120,
+        cost: 540,
+        odometer: 119565,
+        date: new Date('2026-02-19')
       }
     });
   }
