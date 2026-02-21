@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { Controller, useForm } from 'react-hook-form';
+import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -53,14 +53,24 @@ export const LoginPage = () => {
         <form className="space-y-4" onSubmit={onSubmit}>
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-600">Email</label>
-            <Input type="email" {...form.register('email')} />
+            <Controller
+              control={form.control}
+              name="email"
+              render={({ field }) => <Input type="email" autoComplete="email" {...field} />}
+            />
             {form.formState.errors.email ? (
               <p className="mt-1 text-xs text-rose-600">{form.formState.errors.email.message}</p>
             ) : null}
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-600">Password</label>
-            <Input type="password" {...form.register('password')} />
+            <Controller
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <Input type="password" autoComplete="current-password" {...field} />
+              )}
+            />
             {form.formState.errors.password ? (
               <p className="mt-1 text-xs text-rose-600">{form.formState.errors.password.message}</p>
             ) : null}
@@ -70,6 +80,14 @@ export const LoginPage = () => {
             {form.formState.isSubmitting ? 'Signing in...' : 'Login'}
           </Button>
         </form>
+        <div className="mt-4 flex items-center justify-between text-sm">
+          <Link to="/forgot-password" className="font-medium text-brand-700">
+            Forgot password?
+          </Link>
+          <Link to="/register" className="font-medium text-brand-700">
+            Register
+          </Link>
+        </div>
         <p className="mt-5 text-xs text-slate-500">
           Seed users: manager@fleetflow.com, dispatcher@fleetflow.com, safety@fleetflow.com,
           analyst@fleetflow.com

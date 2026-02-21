@@ -72,3 +72,9 @@ export const getUserProfile = async (userId: number) => {
 
   return user;
 };
+
+export const forgotPassword = async (_email: string) => {
+  return {
+    message: 'If this email exists, reset instructions have been sent.'
+  };
+};

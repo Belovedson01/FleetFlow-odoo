@@ -24,3 +24,12 @@ export const RequireRoles = ({ roles }: { roles: Role[] }) => {
   }
   return <Outlet />;
 };
+
+export const PublicOnly = () => {
+  const user = useAuthStore((s) => s.user);
+
+  if (user) {
+    return <Navigate to={defaultRouteByRole[user.role]} replace />;
+  }
+  return <Outlet />;
+};

@@ -3,7 +3,7 @@ import { useAuthStore } from '../store/auth.store';
 import type { Role } from '../types';
 
 const navItems: Array<{ to: string; label: string; roles: Role[] }> = [
-  { to: '/dashboard', label: 'Dashboard', roles: ['MANAGER', 'DISPATCHER', 'SAFETY'] },
+  { to: '/dashboard', label: 'Dashboard', roles: ['MANAGER', 'DISPATCHER', 'SAFETY', 'ANALYST'] },
   { to: '/vehicles', label: 'Vehicle Registry', roles: ['MANAGER', 'DISPATCHER', 'SAFETY'] },
   { to: '/trips', label: 'Trip Dispatcher', roles: ['MANAGER', 'DISPATCHER', 'SAFETY'] },
   { to: '/maintenance', label: 'Maintenance Logs', roles: ['MANAGER', 'DISPATCHER', 'SAFETY'] },

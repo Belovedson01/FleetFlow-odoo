@@ -1,15 +1,22 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { RequireAuth, RequireRoles } from './components/RouteGuards';
+import { PublicOnly, RequireAuth, RequireRoles } from './components/RouteGuards';
 import { defaultRouteByRole } from './lib/navigation';
 import { AppLayout } from './layouts/AppLayout';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { DriversPage } from './pages/DriversPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { FuelLogsPage } from './pages/FuelLogsPage';
+import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { MaintenancePage } from './pages/MaintenancePage';
+import { RegisterPage } from './pages/RegisterPage';
 import { TripsPage } from './pages/TripsPage';
 import { VehiclesPage } from './pages/VehiclesPage';
+import { DispatcherDashboardPage } from './pages/dashboard/DispatcherDashboardPage';
+import { FinanceDashboardPage } from './pages/dashboard/FinanceDashboardPage';
+import { ManagerDashboardPage } from './pages/dashboard/ManagerDashboardPage';
+import { SafetyDashboardPage } from './pages/dashboard/SafetyDashboardPage';
 import { useAuthStore } from './store/auth.store';
 
 const HomeRedirect = () => {
@@ -22,8 +29,25 @@ const HomeRedirect = () => {
 
 export const router = createBrowserRouter([
   {
-    path: '/login',
-    element: <LoginPage />
+    element: <PublicOnly />,
+    children: [
+      {
+        path: '/',
+        element: <HomePage />
+      },
+      {
+        path: '/login',
+        element: <LoginPage />
+      },
+      {
+        path: '/register',
+        element: <RegisterPage />
+      },
+      {
+        path: '/forgot-password',
+        element: <ForgotPasswordPage />
+      }
+    ]
   },
   {
     path: '/',
@@ -33,10 +57,27 @@ export const router = createBrowserRouter([
         element: <AppLayout />,
         children: [
           { index: true, element: <HomeRedirect /> },
+          { path: 'dashboard', element: <HomeRedirect /> },
+          {
+            element: <RequireRoles roles={['MANAGER']} />,
+            children: [{ path: 'dashboard/manager', element: <ManagerDashboardPage /> }]
+          },
+          {
+            element: <RequireRoles roles={['DISPATCHER']} />,
+            children: [{ path: 'dashboard/dispatcher', element: <DispatcherDashboardPage /> }]
+          },
+          {
+            element: <RequireRoles roles={['SAFETY']} />,
+            children: [{ path: 'dashboard/safety', element: <SafetyDashboardPage /> }]
+          },
+          {
+            element: <RequireRoles roles={['ANALYST']} />,
+            children: [{ path: 'dashboard/finance', element: <FinanceDashboardPage /> }]
+          },
           {
             element: <RequireRoles roles={['MANAGER', 'DISPATCHER', 'SAFETY']} />,
             children: [
-              { path: 'dashboard', element: <DashboardPage /> },
+              { path: 'dashboard/ops', element: <DashboardPage /> },
               { path: 'vehicles', element: <VehiclesPage /> },
               { path: 'trips', element: <TripsPage /> },
               { path: 'maintenance', element: <MaintenancePage /> },
@@ -52,5 +93,5 @@ export const router = createBrowserRouter([
       }
     ]
   },
-  { path: '*', element: <Navigate to="/dashboard" replace /> }
+  { path: '*', element: <Navigate to="/" replace /> }
 ]);
