@@ -102,3 +102,36 @@ export type AnalyticsResponse = {
   };
   vehicles: DashboardResponse['topCostliestVehicles'];
 };
+
+export type ManagerDashboardResponse = {
+  totalVehicles: number;
+  activeVehicles: number;
+  totalDrivers: number;
+  activeTrips: number;
+  utilizationPercentage: number;
+  revenueLast7Days: Array<{ day: string; revenue: number }>;
+  tripStatusDistribution: Array<{ status: TripStatus; count: number }>;
+};
+
+export type DispatcherDashboardResponse = {
+  pendingTrips: number;
+  assignedTrips: number;
+  inProgressTrips: number;
+  delayedTrips: number;
+  availableDrivers: number;
+};
+
+export type SafetyDashboardResponse = {
+  vehiclesInMaintenance: number;
+  delayedTrips: number;
+  incidentCount: number;
+  complianceAlerts: number;
+};
+
+export type FinanceDashboardResponse = {
+  totalRevenue: number;
+  totalExpense: number;
+  netProfit: number;
+  revenueLast30Days: Array<{ day: string; revenue: number }>;
+  monthlyBreakdown: Array<{ month: string; revenue: number; expense: number }>;
+};
