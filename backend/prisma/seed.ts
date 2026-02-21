@@ -9,6 +9,8 @@ async function main() {
   await prisma.user.upsert({
     where: { email: 'manager@fleetflow.com' },
     update: {
+      failedLoginAttempts: 0,
+      lockUntil: null,
       emailVerifiedAt: new Date(),
       emailVerificationTokenHash: null,
       emailVerificationTokenExpiry: null
@@ -25,6 +27,8 @@ async function main() {
   await prisma.user.upsert({
     where: { email: 'dispatcher@fleetflow.com' },
     update: {
+      failedLoginAttempts: 0,
+      lockUntil: null,
       emailVerifiedAt: new Date(),
       emailVerificationTokenHash: null,
       emailVerificationTokenExpiry: null
@@ -41,6 +45,8 @@ async function main() {
   await prisma.user.upsert({
     where: { email: 'safety@fleetflow.com' },
     update: {
+      failedLoginAttempts: 0,
+      lockUntil: null,
       emailVerifiedAt: new Date(),
       emailVerificationTokenHash: null,
       emailVerificationTokenExpiry: null
@@ -57,6 +63,8 @@ async function main() {
   await prisma.user.upsert({
     where: { email: 'analyst@fleetflow.com' },
     update: {
+      failedLoginAttempts: 0,
+      lockUntil: null,
       emailVerifiedAt: new Date(),
       emailVerificationTokenHash: null,
       emailVerificationTokenExpiry: null
