@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  MANAGER
+  DISPATCHER
+  SAFETY
+  ANALYST
+}
+
+enum VehicleStatus {
+  AVAILABLE
+  ON_TRIP
+  IN_SHOP
+  RETIRED
+}
+
+enum DriverStatus {
+  ON_DUTY
+  OFF_DUTY
+  SUSPENDED
+  ON_TRIP
+}
+
+enum TripStatus {
+  DRAFT
+  DISPATCHED
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role
+  createdAt DateTime @default(now())
+}
+
+model Vehicle {
+  id              Int           @id @default(autoincrement())
+  name            String
+  model           String
+  licensePlate    String        @unique
+  maxCapacityKg   Float
+  odometer        Float
+  acquisitionCost Float
+  status          VehicleStatus @default(AVAILABLE)
+  createdAt       DateTime      @default(now())
+  trips           Trip[]
+  serviceLogs     ServiceLog[]
+  fuelLogs        FuelLog[]
+}
+
+model Driver {
+  id              Int          @id @default(autoincrement())
+  name            String
+  licenseNumber   String       @unique
+  licenseCategory String
+  licenseExpiry   DateTime
+  status          DriverStatus @default(ON_DUTY)
+  safetyScore     Float        @default(100)
+  createdAt       DateTime     @default(now())
+  trips           Trip[]
+}
+
+model Trip {
+  id            Int        @id @default(autoincrement())
+  vehicleId     Int
+  driverId      Int
+  cargoWeight   Float
+  origin        String
+  destination   String
+  revenue       Float      @default(0)
+  status        TripStatus @default(DRAFT)
+  startOdometer Float?
+  endOdometer   Float?
+  createdAt     DateTime   @default(now())
+  vehicle       Vehicle    @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  driver        Driver     @relation(fields: [driverId], references: [id], onDelete: Restrict)
+
+  @@index([vehicleId])
+  @@index([driverId])
+}
+
+model ServiceLog {
+  id          Int      @id @default(autoincrement())
+  vehicleId   Int
+  description String
+  cost        Float
+  date        DateTime
+  createdAt   DateTime @default(now())
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId])
+}
+
+model FuelLog {
+  id        Int      @id @default(autoincrement())
+  vehicleId Int
+  liters    Float
+  cost      Float
+  odometer  Float
+  date      DateTime
+  createdAt DateTime @default(now())
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId])
+}
