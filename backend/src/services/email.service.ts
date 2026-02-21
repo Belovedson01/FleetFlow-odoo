@@ -7,11 +7,16 @@ type SendEmailInput = {
 };
 
 const isProduction = process.env.NODE_ENV === 'production';
-const smtpConfigured = Boolean(process.env.SMTP_HOST);
+const smtpConfigured = Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS && process.env.SMTP_FROM);
 
-if (!smtpConfigured && !isProduction) {
+if (smtpConfigured) {
   // eslint-disable-next-line no-console
-  console.warn('SMTP configuration missing. Using development email fallback logger.');
+  console.log('SMTP configured. Real email delivery enabled.');
+} else if (isProduction) {
+  throw new Error('SMTP configuration missing in production environment.');
+} else {
+  // eslint-disable-next-line no-console
+  console.warn('SMTP configuration missing. Using development fallback logger.');
 }
 
 const transporter = smtpConfigured
@@ -28,9 +33,6 @@ const transporter = smtpConfigured
 
 export const sendEmail = async ({ to, subject, html }: SendEmailInput) => {
   if (!transporter) {
-    if (isProduction) {
-      throw new Error('SMTP configuration missing');
-    }
     // eslint-disable-next-line no-console
     console.log(`[email:fallback] to=${to} subject="${subject}"`);
     return;

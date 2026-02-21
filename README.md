@@ -19,6 +19,27 @@ docker-compose up --build
 
 Backend API will be at `http://localhost:4000`, frontend at `http://localhost:5173`.
 
+## Email Configuration
+
+1. Copy the compose-level environment template:
+
+```bash
+cp .env.example .env
+```
+
+2. Open `.env` and set real SMTP credentials.
+3. Restart containers:
+
+```bash
+docker-compose up -d --build
+```
+
+4. Verify SMTP variables are loaded in backend:
+
+```bash
+docker-compose exec backend sh -c "printenv | grep '^SMTP_'"
+```
+
 ## Seeded Accounts
 
 Password for all accounts: `Password@123`
