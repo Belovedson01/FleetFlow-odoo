@@ -7,7 +7,6 @@ dist
 !frontend/.env.example
 *.log
 coverage
-backend/prisma/migrations
 frontend/dist
 frontend/*.tsbuildinfo
 frontend/vite.config.js
