@@ -23,6 +23,8 @@ services:
       dockerfile: Dockerfile
     container_name: fleetflow-backend
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       NODE_ENV: development
       PORT: 4000
@@ -37,12 +39,6 @@ services:
       AUTH_RATE_LIMIT_MAX: 10
       FRONTEND_URL: http://localhost:5173
       CORS_ORIGIN: http://localhost:5173
-      SMTP_HOST: "${SMTP_HOST:-}"
-      SMTP_PORT: "${SMTP_PORT:-587}"
-      SMTP_SECURE: "${SMTP_SECURE:-false}"
-      SMTP_USER: "${SMTP_USER:-}"
-      SMTP_PASS: "${SMTP_PASS:-}"
-      SMTP_FROM: "${SMTP_FROM:-FleetFlow <no-reply@fleetflow.com>}"
     ports:
       - "4000:4000"
     depends_on:
