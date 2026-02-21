@@ -48,29 +48,29 @@ jobs:
           node-version: 20
 
       - name: Install backend dependencies
-        working-directory: fleetflow/backend
+        working-directory: backend
         run: npm ci
 
       - name: Generate Prisma client
-        working-directory: fleetflow/backend
+        working-directory: backend
         run: npx prisma generate
 
       - name: Apply migrations
-        working-directory: fleetflow/backend
+        working-directory: backend
         run: npx prisma migrate deploy
 
       - name: Build backend
-        working-directory: fleetflow/backend
+        working-directory: backend
         run: npm run build
 
       - name: Run backend tests
-        working-directory: fleetflow/backend
+        working-directory: backend
         run: npm run test
 
       - name: Install frontend dependencies
-        working-directory: fleetflow/frontend
+        working-directory: frontend
         run: npm ci
 
       - name: Build frontend
-        working-directory: fleetflow/frontend
+        working-directory: frontend
         run: npm run build
